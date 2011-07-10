@@ -19,101 +19,192 @@ support for simple HTTP requests.
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Streaming.h>
-#include <WebSocket.h>
+#include "MD5.c"
 
 #define PREFIX "/ws"
 #define PORT 8080
 #define FIREPINDURATION 500
+// CRLF characters to terminate lines/handshakes in headers.
+#define CRLF "\r\n"
 
 byte mac[] = { 0x52, 0x4F, 0x43, 0x4B, 0x45, 0x54 };
 byte ip[] = { 192, 168,0, 3 };
 
-WebSocket websocketServer(PREFIX, PORT);
+Server server(8080);
 
 boolean pin8ButtonLastValue = false;
 boolean pin9ButtonLastValue = false;
 
-boolean webSocketClientConnected = false;
-
-// You must have at least one function with the following signature.
-// It will be called by the server when a data frame is received.
-void dataReceivedAction(WebSocket &socket, String &dataString) {
-
-    if (dataString == "FIREPIN1") {
-      Serial.println("FIREPIN1 Begin");
-      digitalWrite(1, HIGH);
-      delay(FIREPINDURATION);
-      digitalWrite(1, LOW);
-      Serial.println("FIREPIN1 End");
-    }
-    if (dataString == "FIREPIN2") {
-      digitalWrite(2, HIGH);
-      delay(FIREPINDURATION);
-      digitalWrite(2, LOW);
-    }
-    if (dataString == "FIREPIN3") {
-      digitalWrite(3, HIGH);
-      delay(FIREPINDURATION);
-      digitalWrite(3, LOW);
-    }
-    if (dataString == "FIREPIN4") {
-      digitalWrite(4, HIGH);
-      delay(FIREPINDURATION);
-      digitalWrite(4, LOW);
-    }
-    
-}
-
 void setup() {
- 
+
   Serial.begin(57600);
-    pinMode(1, OUTPUT);
-    pinMode(2, OUTPUT);
-    pinMode(3, OUTPUT);
-    pinMode(4, OUTPUT);
-    
-    pinMode(8, INPUT);
-    pinMode(9, INPUT);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT); 
+  pinMode(8, INPUT);
+  pinMode(9, INPUT);
 
    
-    Ethernet.begin(mac, ip);
-    websocketServer.begin();
-	// Add the callback function to the server. You can have several callback functions
-	// if you like, they will be called with the same data and in the same order as you
-	// add them to the server. If you have more than one, define CALLBACK_FUNCTIONS before including
-	// WebSocket.h
-    websocketServer.addAction(&dataReceivedAction);
-    delay(1000); // Give Ethernet time to get ready
+  Ethernet.begin(mac, ip);
+  delay(1000); // Give Ethernet time to get ready
+  server.begin();
+  
 }
+
+
+void sendData(const char *str) {
+    Serial.print("Sending data: ");
+    Serial.println(str);
+        server.print((uint8_t) 0x00); // Frame start
+        server.print(str);
+        server.print((uint8_t) 0xFF); // Frame end
+}
+
+
 
 void loop() {
-        
-    if (digitalRead(8) == LOW && !pin8ButtonLastValue) {
-      Serial.println("Button on Pin 8 Pressed");
-      websocketServer.sendData("ButtonOn8Pressed");
-      pin8ButtonLastValue = true;
-    }
-    else if (digitalRead(8) == HIGH) pin8ButtonLastValue = false;
+  // listen for incoming clients
+  Client client = server.available();
+  if (client) {    
     
-    if (digitalRead(9) == LOW && !pin9ButtonLastValue) {
-      Serial.println("Button on Pin 9 Pressed");
-      websocketServer.sendData("ButtonOn9Pressed");
-      pin9ButtonLastValue = true;
+    
+    /***********************************************************************
+    //
+    // WebSocket Handshakes
+    //
+    ***********************************************************************/
+    
+    
+    //Check incoming bytes to see if we just had a request and need to respond with the handshake
+    String temp = String(60);
+    String origin;
+    String host;
+    char bite;
+    bool foundupgrade = false;
+    String key[2];
+    unsigned long intkey[2];
+    
+    //Read client handshake
+    while ((bite = client.read()) != -1) {
+        temp += bite;
+        if (bite == '\n') {
+            Serial.print("Got Line: " + temp);
+            // TODO: Should ignore case when comparing and allow 0-n whitespace after ':'. See the spec:
+            // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html
+            if (!foundupgrade && temp.startsWith("Upgrade: WebSocket")) {
+                // OK, it's a websockets handshake for sure
+                foundupgrade = true;	
+            } else if (temp.startsWith("Origin: ")) {
+                origin = temp.substring(8,temp.length() - 2); // Don't save last CR+LF
+            } else if (temp.startsWith("Host: ")) {
+                host = temp.substring(6,temp.length() - 2); // Don't save last CR+LF
+            } else if (temp.startsWith("Sec-WebSocket-Key1")) {
+                key[0]=temp.substring(20,temp.length() - 2); // Don't save last CR+LF
+            } else if (temp.startsWith("Sec-WebSocket-Key2")) {
+                key[1]=temp.substring(20,temp.length() - 2); // Don't save last CR+LF
+            }
+            /*
+            else {
+                //It wasn't part of a web socket handshake. Let's just put it on screen
+                Serial.print("It's just normal data: " + temp);
+            }
+            */
+            temp = "";		
+        }
     }
-    else if (digitalRead(9) == HIGH) pin9ButtonLastValue = false;
-        
-        
-    // This pulls any connected client into an active stream.
-    websocketServer.socket_client = websocketServer.socket_server.available();
+    temp += 0; // Terminate string
 
-    // If there is a connected client.
-    if (websocketServer.socket_client.connected()) {
-        // Check request and look for websocket handshake
-        Serial.println("Client connected, try for websocket upgrade");
-        if (websocketServer.analyzeRequest(BUFFER_LENGTH)) Serial.println("New Websocket established");
-
-        //Handle any incoming events
-        websocketServer.socketStream(BUFFER_LENGTH);
-    }
-}
+    // Assert that we have all headers that are needed. If so, go ahead and
+    // send response headers.
+    if (foundupgrade == true && host.length() > 0 && key[0].length() > 0 && key[1].length() > 0) {
+        // All ok, proceed with challenge and MD5 digest
+        char key3[9] = {0};
+        // What now is in temp should be the third key
+        temp.toCharArray(key3, 9);
+        
+        // Process keys
+        for (int i = 0; i <= 1; i++) {
+            unsigned int spaces =0;
+            String numbers;
+            
+            for (int c = 0; c < key[i].length(); c++) {
+                char ac = key[i].charAt(c);
+                if (ac >= '0' && ac <= '9') {
+                    numbers += ac;
+                }
+                if (ac == ' ') {
+                    spaces++;
+                }
+            }
+            char numberschar[numbers.length() + 1];
+            numbers.toCharArray(numberschar, numbers.length()+1);
+            intkey[i] = strtoul(numberschar, NULL, 10) / spaces;		
+        }
+        
+        unsigned char challenge[16] = {0};
+        challenge[0] = (unsigned char) ((intkey[0] >> 24) & 0xFF);
+        challenge[1] = (unsigned char) ((intkey[0] >> 16) & 0xFF);
+        challenge[2] = (unsigned char) ((intkey[0] >>  8) & 0xFF);
+        challenge[3] = (unsigned char) ((intkey[0]      ) & 0xFF);	
+        challenge[4] = (unsigned char) ((intkey[1] >> 24) & 0xFF);
+        challenge[5] = (unsigned char) ((intkey[1] >> 16) & 0xFF);
+        challenge[6] = (unsigned char) ((intkey[1] >>  8) & 0xFF);
+        challenge[7] = (unsigned char) ((intkey[1]      ) & 0xFF);
+        
+        memcpy(challenge + 8, key3, 8);
+        
+        unsigned char md5Digest[16];
+        MD5(challenge, md5Digest, 16);
+        
+        Serial.println("Sending response header:");
+        String responseHeader;
+        responseHeader += "HTTP/1.1 101 Web Socket Protocol Handshake\r\n";
+        responseHeader += "Upgrade: WebSocket\r\n";
+        responseHeader += "Connection: Upgrade\r\n";
+        responseHeader += "Sec-WebSocket-Origin: ";        
+        responseHeader += origin;
+        responseHeader += CRLF;
+        
+        // The "Host:" value should be used as location
+        responseHeader += "Sec-WebSocket-Location: ws://";
+        responseHeader += host;
+        responseHeader += "/";
+        responseHeader += CRLF;
+        responseHeader += CRLF;
+        Serial.println(responseHeader);
+        client.print(responseHeader);
+        client.write(md5Digest, 16);
+        Serial.println("Socket Connected");
+    } else {
+        // Nope, failed handshake. Disconnect
+        Serial.println("Header mismatch");
+    }        
+  }//if client
+  
+  
+  /***********************************************************************
+  //
+  // Outgoing Events
+  //
+  ***********************************************************************/
+  //Ok No more handshakes. Let's get to buisness
+  if (digitalRead(8) == LOW && !pin8ButtonLastValue) {
+    Serial.println("Button on Pin 8 Pressed");
+    sendData("ButtonOn8Pressed");
+    pin8ButtonLastValue = true;
+  }
+  else if (digitalRead(8) == HIGH) pin8ButtonLastValue = false;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+}//loop
 
