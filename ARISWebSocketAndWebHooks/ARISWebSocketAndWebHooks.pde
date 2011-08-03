@@ -27,8 +27,10 @@ support for simple HTTP requests.
 // CRLF characters to terminate lines/handshakes in headers.
 #define CRLF "\r\n"
 
-byte mac[] = { 0x52, 0x4F, 0x43, 0x4B, 0x45, 0x54 };
-byte ip[] = { 192, 168,0, 3 };
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x49, 0xDE };
+byte ip[] = { 144, 92, 40, 45 };
+byte gateway[] = { 144,92,40, 1 };
+byte subnet[] = { 255, 255, 255, 128 };
 
 Server server(8080);
 
@@ -46,7 +48,7 @@ void setup() {
   pinMode(9, INPUT);
 
    
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac, ip, gateway, subnet);
   delay(1000); // Give Ethernet time to get ready
   server.begin();
   
@@ -56,10 +58,11 @@ void setup() {
 void sendData(const char *str) {
     Serial.print("Sending data: ");
     Serial.println(str);
-        server.print((uint8_t) 0x00); // Frame start
-        server.print(str);
-        server.print((uint8_t) 0xFF); // Frame end
+    server.print((uint8_t) 0x00); // Frame start
+    server.print(str);
+    server.print((uint8_t) 0xFF); // Frame end
 }
+
 
 
 
@@ -67,17 +70,14 @@ void loop() {
   // listen for incoming clients
   Client client = server.available();
   if (client) {    
-    
-    
+     
     /***********************************************************************
     //
     // WebSocket Handshakes
     //
     ***********************************************************************/
-    
-    
-    //Check incoming bytes to see if we just had a request and need to respond with the handshake
     String temp = String(60);
+    String readData;
     String origin;
     String host;
     char bite;
@@ -85,6 +85,7 @@ void loop() {
     String key[2];
     unsigned long intkey[2];
     
+        
     //Read client handshake
     while ((bite = client.read()) != -1) {
         temp += bite;
@@ -103,15 +104,10 @@ void loop() {
                 key[0]=temp.substring(20,temp.length() - 2); // Don't save last CR+LF
             } else if (temp.startsWith("Sec-WebSocket-Key2")) {
                 key[1]=temp.substring(20,temp.length() - 2); // Don't save last CR+LF
-            }
-            /*
-            else {
-                //It wasn't part of a web socket handshake. Let's just put it on screen
-                Serial.print("It's just normal data: " + temp);
-            }
-            */
+            }       
             temp = "";		
         }
+        //Else just keep looping until we get an /n
     }
     temp += 0; // Terminate string
 
@@ -177,8 +173,27 @@ void loop() {
         client.write(md5Digest, 16);
         Serial.println("Socket Connected");
     } else {
-        // Nope, failed handshake. Disconnect
-        Serial.println("Header mismatch");
+        Serial.println("This is not a Handshake"); 
+        //Trim off the 0 and 0xFF
+        readData = readData.substring(1,readData.length()-1);
+        Serial.println(readData); 
+        /*
+       //Incoming websocket data should start with a 0 and end with (uint8_t)0xFF
+        if (readData.startsWith(0)) {
+          Serial.println("Started with 0");
+          //parse over the 0
+          readData = readData.substring(1,readData.length());
+          Serial.println("readData after 0: "+readData);
+          char lastChar = readData.substring(readData.length()-1);
+          if ((uint8_t) lastChar == 0xFF) {
+            Serial.println("Ended with with 0xFF");
+          }
+        }
+        */
+         
+        
+        readData = "";
+     
     }        
   }//if client
   
