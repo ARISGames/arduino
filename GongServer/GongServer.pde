@@ -21,8 +21,12 @@
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-byte ip[] = { 192,168,1, 177 }; // http://192.168.1.177/
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x49, 0xDE };
+byte ip[] = { 144, 92, 40, 45 };
+byte gateway[] = { 144,92,40, 1 };
+byte subnet[] = { 255, 255, 255, 128 };
+// http://144.92.40.45/
+// http://doit-arduino.doit.wisc.edu
 
 Servo gongServ;
 int gongSent = 0;
