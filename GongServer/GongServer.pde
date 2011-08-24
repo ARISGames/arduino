@@ -101,6 +101,8 @@ void loop()
 
 void sendGong()
 {
+  /*
+  //Code used to try to gong twice- this prevented it. No longer necessary (?)
   if(gongSent == 0)
   {
     gongSent = 1;
@@ -110,15 +112,17 @@ void sendGong()
   {
     gongSent = 0; 
   }
+  */
+  gong();
 }
 
 void gong()
 {
   gongServ.attach(servoPin);
-  gongServ.write(70);
+  gongServ.write(50);
   delay(1000);
-  gongServ.write(120);
-  delay(200);
+  gongServ.write(140);
+  delay(300);
   gongServ.write(90);
   delay(1000);
   gongServ.detach();
