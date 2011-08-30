@@ -101,8 +101,6 @@ void loop()
 
 void sendGong()
 {
-  /*
-  //Code used to try to gong twice- this prevented it. No longer necessary (?)
   if(gongSent == 0)
   {
     gongSent = 1;
@@ -112,8 +110,6 @@ void sendGong()
   {
     gongSent = 0; 
   }
-  */
-  gong();
 }
 
 void gong()
