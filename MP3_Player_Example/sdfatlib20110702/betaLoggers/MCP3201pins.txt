@@ -1,0 +1,18 @@
+My setup for Mega or 328.
+
+I used these pins but you can use other pins.
+
+On the Mega avoid pins such as 6, 7, 8, and 9 as
+described in MegaPins.txt
+
+
+MCP3201
+
+   +--U--+
++5V|1   8|+5V
+AIN|2   7|CLK  -> analog pin 0
+GND|3   6|DOUT -> analog pin 1
+GND|4   5|CS   -> analog pin 2
+   +-----+
+
+AIN - Analog signal in.

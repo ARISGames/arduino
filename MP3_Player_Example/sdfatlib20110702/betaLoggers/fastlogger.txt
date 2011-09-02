@@ -1,0 +1,39 @@
+fastLogger.pde demonstrates a technique to log data at a high rate
+without using raw writes to the SD card.
+
+This sketch captures binary data in an interrupt routine and stores
+the data in a ring buffer.  Data is formatted in loop() and written
+to the SD.
+
+This sketch is capable of logging analogRead() data at rates over
+2,000 samples per second with a good quality correctly formatted
+SD card.
+
+Higher rates can be achieve with a faster ADC since analogRead()
+takes about 115 microseconds.  Also eliminating sync() calls and
+formatting the data in hex would increase the rate.
+
+A MCP3201 ADC and can log up to 5,000 samples per
+second to a text file.
+
+If your SD shield/module does not use SS as chip select edit this line
+
+const uint8_t chipSelect = SS_PIN;
+
+
+Compile, load, and run fastLogger.pde.  It should log data from
+analog pin zero at 2000 samples per second to a file called FAST00.CSV.
+
+If overruns occur and data points are dropped there will be lines
+beginning with a "#" followed by a number [1,15]. If the number
+is less than 15, it is the number of points dropped.  If the
+number is 15, then 15 or more points were dropped.
+
+For example, if 3 points were dropped the dropped points will be
+represented by this line.
+
+#3
+
+Send comments/questions to me fat16lib@sbcglobal.net
+
+Bill Greiman

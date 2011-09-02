@@ -1,0 +1,31 @@
+The following pins should not be used on the Mega for bit-bang SPI.
+These pins do not support fast atomic I/O operations.
+
+If you use these pins with MCP_SAR.h you must disable interrupts
+When you call MCP_SAR functions.  The functions will be much slower.
+
+Pin  port/bit
+ 6    H3
+ 7    H4
+ 8    H5
+ 9    H6
+14    J1
+15    J0
+16    H1
+17    H0
+42    L7
+43    L6
+44    L5
+45    L4
+46    L3
+47    L2
+48    L1
+49    L0
+62    K0
+63    K1
+64    K2
+65    K3
+66    K4
+67    K5
+68    K6
+69    K7
