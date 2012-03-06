@@ -76,19 +76,12 @@ void ethernetFailed(){
 
 void ethernetSucceeded(){
   Serial.println("Ethernet Succeeded");
-      redIntensity = 255;
-      greenIntensity = 255;
-  for(blueIntensity= 225;blueIntensity > 0;blueIntensity-=5){
-
-
 
       analogWrite(GREEN_LED_PIN, 20);
     analogWrite(BLUE_LED_PIN, 0);
     analogWrite(RED_LED_PIN, 0);
     
-
-    delay(DISPLAY_TIME);
-  }
+  
 }
 
 
