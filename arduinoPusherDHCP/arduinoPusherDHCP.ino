@@ -1,26 +1,27 @@
-#include <aJSON.h>
 
-
-
-#include <WString.h>
-#include "pitches.h"
 #include <SPI.h>
 #include <Ethernet.h>
 
 #include <PusherClient.h>
 
-// notes in the melody:
-int melody[] = {
-  NOTE_FS2, NOTE_FS2,0,NOTE_A2, NOTE_A2,0, NOTE_E2,NOTE_E2,0, NOTE_FS2, NOTE_FS2};
 
-// note durations: 4 = quarter note, 8 = eighth note, etc.:
-int noteDurations[] = {
-  6, 6, 1, 6,6,3,6,6,3,6,6 };
+
 IPAddress server(50,57,138,30); // Google
 String socket_id = "socket_id";
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x49, 0xDE };
+byte ip[] = { 192,168,2,7 };
+byte gateway[] = { 192,168,2,1 };
+byte subnet[] = { 255, 255, 255, 0 };
+
 int inputPin = 3;
-int ledPin = 9;
+int ledPin = 2;
+const int RED_LED_PIN = 5;
+const int GREEN_LED_PIN = 6;
+const int BLUE_LED_PIN = 7;
+
+int redIntensity = 0;
+int greenIntensity = 0;
+int blueIntensity = 0;
 EthernetClient arisClient;
 PusherClient client;
 
@@ -28,18 +29,21 @@ void setup() {
   pinMode(inputPin, INPUT);
     pinMode(ledPin, OUTPUT);
 Serial.begin(9600);
-  delay(1000);
-  Serial.println("Attempting to obtain a DHCP lease...");
 
- if (Ethernet.begin(mac) == 0) {
+  Serial.println("Attempting to obtain a DHCP lease...");
+ethernetConnecting();
+ /*if (Ethernet.begin(mac) == 0) {
     Serial.println("Init Ethernet failed");
+    ethernetFailed();
     for(;;)
       ;
-  }
+  }*/
+  Ethernet.begin(mac,ip);
           Serial.println("Ethernet Connected");
-  delay(3000);
+
+  delay(1000);
   
-  if(client.connect("7fe26fe9f55d4b78ea02")) {
+  /*if(client.connect("7fe26fe9f55d4b78ea02")) {
    client.bind("private-pusher_room_event", play);
    client.bind("pusher:connection_established",getSocketId);
 client.bindAll(handleAllEvents);
@@ -51,13 +55,14 @@ client.bindAll(handleAllEvents);
             Serial.println("Could not connect");
     while(1) {}
   }
-  
+  */
   if(arisClient.connect(server,80)){
     Serial.println("Connected to ARIS server");
-	
+	          ethernetSucceeded();
   }
   else{
     Serial.println("Could not connect to ARIS server");
+    ethernetFailed();
   }
 }
 
@@ -72,22 +77,23 @@ void loop() {
    Serial.println("Button Pressed");
  }
 
-  if (client.connected()) {
+  /*if (client.connected()) {
     client.monitor();
 
   }
   else {
  Serial.println("Client Disconnected");
-  }
+  }*/
   
   if (arisClient.available()) {
     //Serial.println("arisClient read");
     char c = arisClient.read();
     Serial.print(c);
   }
-
+  
   // if the server's disconnected, stop the client:
   if (!arisClient.connected()) {
+    ethernetFailed();
     Serial.println();
     Serial.println("disconnecting.");
     arisClient.stop();
@@ -96,6 +102,13 @@ void loop() {
     for(;;)
       ;
   }
+  else{
+
+  }
+  
+}
+
+void connectToServer(){
   
 }
 void getSocketId(String data){
@@ -124,29 +137,37 @@ Serial.println(data);
 
 }
 void play(String data){
-            Serial.println("Entering play");
-   // iterate over the notes of the melody:
-  for (int thisNote = 0; thisNote < 11; thisNote++) {
-
-    // to calculate the note duration, take one second 
-    // divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 1000/noteDurations[thisNote];
-    tone(8, melody[thisNote],noteDuration);
-
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noTone(8);
-  }
+  Serial.println("Entering play");
+  //HANDLE EVENT HERE
+  
 }
 
-// Just a utility function to nicely format an IP address.
-const char* ip_to_str(const uint8_t* ipAddr)
-{
-  static char buf[16];
-  sprintf(buf, "%d.%d.%d.%d\0", ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]);
-  return buf;
+void ethernetConnecting(){
+  Serial.println("Ethernet Connecting");
+
+
+    analogWrite(GREEN_LED_PIN, 18);
+    analogWrite(BLUE_LED_PIN, 0);
+    analogWrite(RED_LED_PIN, 40);
+
+ 
+}
+void ethernetFailed(){
+  Serial.println("Ethernet Failed");
+    
+ 
+    analogWrite(GREEN_LED_PIN, 0);
+    analogWrite(BLUE_LED_PIN, 0);
+    analogWrite(RED_LED_PIN, 20);
+
+}
+
+void ethernetSucceeded(){
+  Serial.println("Ethernet Succeeded");
+
+      analogWrite(GREEN_LED_PIN, 20);
+    analogWrite(BLUE_LED_PIN, 0);
+    analogWrite(RED_LED_PIN, 0);
+    
+  
 }

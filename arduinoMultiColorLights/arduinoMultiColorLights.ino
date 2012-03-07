@@ -7,6 +7,10 @@
 IPAddress server(50,57,138,30); // ARIS Server
 String socket_id = "socket_id";
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x49, 0xDE };
+byte ip[] = { 192,168,2,7 };
+byte gateway[] = { 192,168,2,1 };
+byte subnet[] = { 255, 255, 255, 0 };
+
 int inputPin = 3;
 int ledPin = 2;
 
