@@ -11,11 +11,11 @@ int MultiLight::DEFAULT_R_PIN = 9;
 int MultiLight::DEFAULT_G_PIN = 10;
 int MultiLight::DEFAULT_B_PIN = 11;
 
-int MultiLight::COLOR_OFF[3] = {2, 0, 0};
-int MultiLight::COLOR_RED[3] = {255, 0, 0};
-int MultiLight::COLOR_YELLOW[3] = {127, 127, 0};
-int MultiLight::COLOR_GREEN[3] = {255, 0, 0};
-int MultiLight::COLOR_BLUE[3] = {255, 0, 0};
+int MultiLight::COLOR_OFF[3] = {0, 0, 0};
+int MultiLight::COLOR_RED[3] = {20, 0, 0};
+int MultiLight::COLOR_YELLOW[3] = {35, 20, 0};
+int MultiLight::COLOR_GREEN[3] = {0, 20, 0};
+int MultiLight::COLOR_BLUE[3] = {0, 0, 20};
 
 MultiLight::MultiLight()
 {
