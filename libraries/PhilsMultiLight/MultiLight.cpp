@@ -11,7 +11,7 @@ int MultiLight::DEFAULT_R_PIN = 9;
 int MultiLight::DEFAULT_G_PIN = 10;
 int MultiLight::DEFAULT_B_PIN = 11;
 
-int MultiLight::COLOR_OFF[3] = {2, 0, 0};
+int MultiLight::COLOR_OFF[3] = {0, 0, 0};
 int MultiLight::COLOR_RED[3] = {20, 0, 0};
 int MultiLight::COLOR_YELLOW[3] = {35, 20, 0};
 int MultiLight::COLOR_GREEN[3] = {0, 20, 0};
@@ -62,20 +62,20 @@ void MultiLight::setColor(int R, int G, int B){
     setColor(color);
 }
 
-void MultiLight::fadeToColor(int color[3], int duration)
+void MultiLight::fadeToColor(int color[3], int duration, int smoothness)
 {
-  for(int i = 0; i < duration; i++)
-  {
-    analogWrite(r_pin, rgb_color[0]+((rgb_color[0]-color[0])*i));
-    analogWrite(g_pin, rgb_color[1]+((rgb_color[1]-color[1])*i));
-    analogWrite(b_pin, rgb_color[2]+((rgb_color[2]-color[2])*i));
-    delay(10);
-  }
-  setColor(color);
+    for(int i = 0; i < smoothness; i++)
+        {
+            analogWrite(r_pin, rgb_color[0]+((color[0]-rgb_color[0])*(i/smoothness)));
+            analogWrite(g_pin, rgb_color[1]+((color[1]-rgb_color[1])*(i/smoothness)));
+            analogWrite(b_pin, rgb_color[2]+((color[2]-rgb_color[2])*(i/smoothness)));
+            delay(duration/smoothness);
+            }
+    setColor(color);
 }
 
-void MultiLight::fadeToColor(int R, int G, int B, int duration)
+void MultiLight::fadeToColor(int R, int G, int B, int duration, int smoothness)
 {
     int color[3] = {R, G, B};
-    fadeToColor(color,duration);
+    fadeToColor(color,duration,smoothness);
 }

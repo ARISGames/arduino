@@ -13,8 +13,8 @@ class MultiLight
     void setPins(int rPin, int gPin, int bPin);
     void setColor(int color[3]);
     void setColor(int R, int G, int B);
-    void fadeToColor(int color[3], int duration);
-    void fadeToColor(int R, int G, int B, int duration);
+    void fadeToColor(int color[3], int duration, int smoothness);
+    void fadeToColor(int R, int G, int B, int duration, int smoothness);
 
     static int DEFAULT_R_PIN;
     static int DEFAULT_G_PIN;
