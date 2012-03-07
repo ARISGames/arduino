@@ -12,10 +12,10 @@ int MultiLight::DEFAULT_G_PIN = 10;
 int MultiLight::DEFAULT_B_PIN = 11;
 
 int MultiLight::COLOR_OFF[3] = {2, 0, 0};
-int MultiLight::COLOR_RED[3] = {255, 0, 0};
-int MultiLight::COLOR_YELLOW[3] = {127, 127, 0};
-int MultiLight::COLOR_GREEN[3] = {255, 0, 0};
-int MultiLight::COLOR_BLUE[3] = {255, 0, 0};
+int MultiLight::COLOR_RED[3] = {20, 0, 0};
+int MultiLight::COLOR_YELLOW[3] = {35, 20, 0};
+int MultiLight::COLOR_GREEN[3] = {0, 20, 0};
+int MultiLight::COLOR_BLUE[3] = {0, 0, 20};
 
 MultiLight::MultiLight()
 {
@@ -57,6 +57,11 @@ void MultiLight::setColor(int color[3])
   analogWrite(b_pin, rgb_color[2]);
 }
 
+void MultiLight::setColor(int R, int G, int B){
+    int color[3] = {R, G, B};
+    setColor(color);
+}
+
 void MultiLight::fadeToColor(int color[3], int duration)
 {
   for(int i = 0; i < duration; i++)
@@ -67,4 +72,10 @@ void MultiLight::fadeToColor(int color[3], int duration)
     delay(10);
   }
   setColor(color);
+}
+
+void MultiLight::fadeToColor(int R, int G, int B, int duration)
+{
+    int color[3] = {R, G, B};
+    fadeToColor(color,duration);
 }
