@@ -7,15 +7,15 @@
 #include "Arduino.h"
 #include "MultiLight.h"
 
-int MultiLight::DEFAULT_R_PIN = 9;
-int MultiLight::DEFAULT_G_PIN = 10;
-int MultiLight::DEFAULT_B_PIN = 11;
+int MultiLight::DEFAULT_R_PIN = 14; //A0
+int MultiLight::DEFAULT_G_PIN = 15; //A1
+int MultiLight::DEFAULT_B_PIN = 16; //A2
 
 int MultiLight::COLOR_OFF[3] = {0, 0, 0};
-int MultiLight::COLOR_RED[3] = {20, 0, 0};
-int MultiLight::COLOR_YELLOW[3] = {35, 20, 0};
-int MultiLight::COLOR_GREEN[3] = {0, 20, 0};
-int MultiLight::COLOR_BLUE[3] = {0, 0, 20};
+int MultiLight::COLOR_RED[3] = {135, 0, 0};
+int MultiLight::COLOR_YELLOW[3] = {135, 135, 0};
+int MultiLight::COLOR_GREEN[3] = {0, 135, 0};
+int MultiLight::COLOR_BLUE[3] = {0, 0, 135};
 
 MultiLight::MultiLight()
 {
