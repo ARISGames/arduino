@@ -26,10 +26,9 @@ void setup() {
   ethernetConnecting();
   Ethernet.begin(mac,ip);
   delay(1000); //Give time to initialize before connecting
-  if(pushMessage("arduino_test_channel", "arduino_event_register", "success"))
-    ethernetSucceeded();
-  else
+  while(!pushMessage("arduino_test_channel", "arduino_event_register", "success"))
     ethernetFailed();
+  ethernetSucceeded();
     
   for(int i = 0; i < 7; i++)
     pinMode(buttonPin[i], INPUT);
@@ -51,11 +50,17 @@ void loop() {
 
 
 
+
+
+
+
+
+
 void readButtons()
 {
   for(int i = 0; i < 7; i++)
   {
-    if(digitalRead(buttonPin[i]) == HIGH)
+    if(digitalRead(buttonPin[i]) == LOW)
     {
       if(buttonCountDown[i] == 0)
       {
